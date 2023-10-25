@@ -1,0 +1,595 @@
+---
+title: "TinyML:"
+subtitle: "Carros de lego, <br> microcontroladores e <br> visão computacional"
+author: "Thiago Pires | IBM <br> <img src='rte.png' width='30%'/>"
+title-slide-attributes:
+  data-background-image: cover.png
+  data-background-size: cover 
+format: 
+  revealjs:
+    theme: theme.scss
+    width: 1600
+    height: 900
+    footer: "IBM TLC RTE 2023"
+lang: pt
+code-annotations: below
+self-contained: true
+---
+
+## Thiago Pires {data-background-image="lego.webp" data-background-opacity="0.05"}
+
+:::: columns
+::: {.column}
+![](avatar.jpeg){.rounded-corners .absolute left=5%}
+:::
+::: {.column}
+### Formação:
+- Estatística (UERJ)
+- MSc. Epidemiologia (ENSP/FIOCRUZ)
+- DSc. Engenharia Biomédica (COPPE/UFRJ)
+
+\
+
+### Experiência profissional:
+- Pesquisador (FIOCRUZ)
+- Professor (UFF)
+- Estatístico (FGV)
+- [Cientista de Dados (CIO/IBM)]{.fragment .highlight-blue}
+:::
+::::
+
+# TinyML
+
+> É uma abreviação para *Tiny Machine Learning*. Refere-se a uma abordagem de [aplicação de modelos de aprendizado de máquina em dispositivos de recurso computacional limitado]{.fragment .highlight-blue}, como microcontroladores, microprocessadores e sistemas embarcados.
+
+# Microcontroladores {data-background-image="esp32.png" data-background-opacity="0.4"}
+
+## Microcontroladores {data-background-image="esp32.png" data-background-opacity="0.04"}
+
+> É um pequeno computador num único circuito integrado
+
+\
+
+:::: columns
+::: {.column}
+- Contendo um núcleo de processador
+- Memória
+- Periféricos programáveis de entrada e saída. 
+- WIFI e Bluetooth.
+:::
+
+::: {.column}
+
+<center>
+![**ESP32** é uma série de microcontroladores de baixo custo e baixo consumo de energia.](esp32.jpeg){width="40%"}
+</center>
+
+:::
+::::
+
+## ATOM Lite
+
+:::: columns
+::: {.column width="40%"}
+- G22, G19, etc: General Purpose Input/Output (GPIO) são portas programáveis de entrada e saída de dados.
+- I2C, SPI: Protocolos de comunicação.
+- GND, 3V3, 5V: Energia. 
+- WIFI, Bluetooth
+- Infravermelho
+:::
+::: {.column width="60%"}
+<center>
+![ATOM Lite da M5Stack](atom.jpeg){width="100%"}
+</center>
+
+:::
+::::
+
+## Protocolos de comunicação
+
+### I2C
+
+:::: columns
+::: {.column}
+[O protocolo I2C (Inter-Integrated Circuit) é uma das interfaces de comunicação serial mais antigas]{.fragment .highlight-blue} e amplamente usadas no mundo da eletrônica. Sua história remonta à década de 1980, quando foi desenvolvido pela Philips 
+:::
+::: {.column}
+```{mermaid}
+sequenceDiagram
+    participant Master as Microcontrolador
+    participant Slave as Periférico
+
+    Master->>Slave: Microcontrolador inicia comunicação
+    note over Master,Slave: SDA muda de alta para baixa voltagem antes do SCL
+    Master->>Slave: Envio do endereço do periférico (7 bits)
+    note over Master,Slave: Inclusão R/W bit (0 para escrita)
+    Slave->>Master: Acknowledge (ACK)
+    note over Slave,Master: Reconhecimento do periférico com um bit
+    Master->>Slave: Envio de dados
+    note over Master,Slave: 8 bits
+    Slave->>Master: Acknowledge (ACK)
+    note over Slave,Master: Periférico reconhece
+    Master-->>Slave: Condição de parada
+    note over Slave,Master: SDA muda de baixa para alta voltagem após o SCL
+```
+:::
+::::
+
+## Protocolos de comunicação
+
+### UART
+
+:::: columns
+::: {.column}
+O protocolo UART (Universal Asynchronous Receiver/Transmitter)
+:::
+::: {.column}
+```{mermaid}
+sequenceDiagram
+    participant DispositivoA as Dispositivo A (Transmissor)
+    participant DispositivoB as Dispositivo B (Receptor)
+
+    DispositivoA->>DispositivoB: Início da Comunicação UART
+    DispositivoA->>DispositivoB: TX para o RX
+    note over DispositivoA, DispositivoB: TX de um dispositivo <br> transmite para o RX do outro
+    DispositivoA-->>DispositivoB: Fim da Comunicação UART
+```
+:::
+::::
+
+## Linguagens de programação para o ESP32
+
+:::: columns
+::: {.column}
+
+\
+
+- C, C++
+- [Python (Micropython)]{.fragment .highlight-blue}
+- Rust
+- Go (TinyGo)
+- Javascript (Espruino)
+- NuttX (SO)
+:::
+::: {.column .fragment}
+
+\
+
+<center>
+![Lego Mindstorms agora aceita Python](lego-mindstorms.jpeg){width="50%"}
+</center>
+:::
+::::
+
+## Lego Technic
+
+:::: columns
+::: {.column}
+**LEGO Technic** é um tema de produtos LEGO voltada para a [criação de modelos mais complexos]{.fragment .highlight-blue}, com o recurso a blocos e peças mais sofisticados do que os das linhas básica e temáticas de LEGO
+:::
+::: {.column}
+<center>
+![Peças do Lego Technic](lego.jpeg){width="45%" right="0"}
+</center>
+
+:::
+::::
+
+## Triciclo Reverso
+
+![](tricycle-reverse-2.png){.absolute left="0" width="40%"}
+![](tricycle-reverse-3.png){.absolute left="550" width="40%"}
+![](tricycle-reverse-4.png){.absolute left="1200" width="40%"}
+
+## Controle remoto via socket
+
+<center>
+![Esquema do controle remoto](remote-control.png){width="70%"}
+</center>
+
+## Controle remoto via socket
+
+\
+
+:::: columns
+::: {.column .fragment}
+```{.python filename="atom_motion.py" code-line-numbers="|9-10|16-19|22|25-27|30-32|50-54|56-59"}
+import machine
+import struct
+import network
+import socket
+import neopixel
+import utime
+
+# setup uart
+uart = machine.UART(1, tx=19, rx=22)
+uart.init(115200, bits=8, parity=None, stop=1)
+
+# setup led
+np = neopixel.NeoPixel(machine.Pin(27), 1)
+
+# setup servo and motor
+sda_pin = machine.Pin(25)
+scl_pin = machine.Pin(21)
+
+i2c = machine.I2C(0, sda=sda_pin, scl=scl_pin, freq=400000)
+devices = i2c.scan()
+
+device = [i for i in devices if hex(i) == '0x38'][0]
+
+def set_speed(speed):
+    buf = bytearray(1)
+    struct.pack_into('b', buf, 0, speed)
+    i2c.writeto_mem(device, 0, buf)
+
+def set_angle(angle):
+    buf = bytearray(1)
+    struct.pack_into('b', buf, 0, angle)
+    i2c.writeto_mem(device, 2, buf)
+
+def set_direction(x):
+    if x > 200:
+        set_angle(65)
+    elif x < 50:
+        set_angle(115)
+    else:
+        set_angle(90)
+        
+def set_run(x):
+    if x > 200:
+        set_speed(127)
+    elif x < 50:
+        set_speed(0)
+    else:
+        set_speed(86)
+
+# create access-point
+ap = network.WLAN(network.AP_IF)
+ap.config(essid='ATOM-MOTION')
+ap.config(max_clients=10)
+ap.active(True)
+
+# create server socket
+server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server.bind(('', 12000))
+
+while True:
+    
+    try:
+        status = int(uart.read(1).decode())
+        if status == 1:
+            np[0] = (0,0,255)
+            np.write()
+        elif status == 0:
+            np[0] = (0, 255, 0)
+            np.write()
+            direction, address_client = server.recvfrom(2048)
+            out = struct.unpack('BBB', direction)
+            set_direction(out[0])
+            set_run(out[1])
+            print(out)
+        else:
+            np[0] = (255, 0, 0)
+            np.write()
+        print(status)
+    except:
+        pass
+    
+    utime.sleep_ms(500)
+```
+:::
+::: {.column .fragment}
+```{.python filename="joystick.py" code-line-numbers="|15|17|25|33|40"}
+import machine
+import struct
+import network
+import socket
+import neopixel
+import time
+
+# setup led
+np = neopixel.NeoPixel(machine.Pin(27), 1)
+
+# setup joystick
+sda_pin = machine.Pin(26)
+scl_pin = machine.Pin(32)
+
+i2c = machine.I2C(0, sda=sda_pin, scl=scl_pin, freq=400000)
+devices = i2c.scan()
+device = [i for i in devices if hex(i) == '0x52'][0]
+
+# connect access-point
+def ap_connect():
+    wlan = network.WLAN(network.STA_IF)
+    wlan.active(True)
+    if not wlan.isconnected():
+        print('connecting to network...')
+        wlan.connect('ATOM-MOTION')
+        while not wlan.isconnected():
+            pass
+    print('network config', wlan.ifconfig())
+
+ap_connect()
+
+# create client socket
+client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+# green led
+np[0] = (0,255,0)
+np.write()
+
+while True:
+    client.sendto(i2c.readfrom(device, 3), ('192.168.4.1', 12000))
+    time.sleep(1)
+```
+:::
+::::
+
+## Controle por visão computacional
+
+:::: columns
+::: {.column width="40%"}
+### UnitV
+::: {.fragment fragment-index=1}
+- Dual-Core 64-bit RISC-V
+:::
+
+::: {.fragment fragment-index=2}
+- K210 é um chip de computação de borda bem poderoso, projetado para reconhecimento visual
+:::
+
+::: {.r-stack}
+![](unitv-front.webp){.fragment fragment-index=1 width="60%"}
+
+![](unitv.webp){.fragment fragment-index=2 width="60%"}
+:::
+
+:::
+::: {.column  width="60%"}
+
+<center>
+![Esquema de controle por visão](vision-control.png){width="80%"}
+</center>
+
+:::
+::::
+
+## Treinamento do modelo
+
+:::: columns
+::: {.column}
+### Dados
+
+- 600 imagens para treino
+
+::: {.fragment fragment-index=1}
+- 300 segue reto
+:::
+
+::: {.fragment fragment-index=4}
+- 300 vire a esquerda
+:::
+
+::: {.r-stack}
+![](train1.png){.fragment fragment-index=1 width="70%"}
+
+![](train2.png){.fragment fragment-index=2 width="70%"}
+
+![](train3.png){.fragment fragment-index=3 width="70%"}
+
+![](train4.png){.fragment fragment-index=4 width="70%"}
+
+![](train5.png){.fragment fragment-index=5 width="70%"}
+
+![](train6.png){.fragment fragment-index=6 width="70%"}
+:::
+:::
+::: {.column .fragment fragment-index=7}
+### MaixHub
+Plataforma online para treinamento do modelo
+
+<center>
+![Plataforma MaixHub](maixhub.png){width="55%"}
+</center>
+
+- Image Augmentation: Rotação, Blur
+- Transfer learning do modelo `mobilenet_0.5`
+- Gera um modelo `.kmodel`
+:::
+::::
+
+## Controle por visão computacional
+
+\
+
+:::: columns
+::: {.column .fragment}
+```{.python filename="unitv_predict.py" code-line-numbers="|8|13|17-20|26,28,30|34,38"}
+import sensor, image, lcd, time
+import KPU as kpu
+from machine import UART
+from fpioa_manager import fm
+
+input_size = (224, 224)
+lcd_rotation=0
+labels = [1, 0]
+
+# setup uart
+fm.register(34, fm.fpioa.UART1_TX)
+fm.register(35, fm.fpioa.UART1_RX)
+uart = UART(UART.UART1, 115200, 8, 0, 0, timeout=1000, read_buf_len=1)
+
+# setup sensor
+sensor.reset()
+sensor.set_pixformat(sensor.RGB565)
+sensor.set_framesize(sensor.QVGA)
+sensor.set_windowing(input_size)
+sensor.skip_frames(time = 2000)
+
+clock = time.clock()
+
+try:
+    task = None
+    task = kpu.load("/sd/model-91412.kmodel")
+    while(True):
+        img = sensor.snapshot()
+        t = time.ticks_ms()
+        fmap = kpu.forward(task, img)
+        t = time.ticks_ms() - t
+        plist=fmap[:]
+        pmax=max(plist)
+        if pmax > .8:
+            max_index=plist.index(pmax)
+            out = labels[max_index]
+            print(out, pmax)
+            uart.write(str(out))
+        lcd.display(img)
+except Exception as e:
+    print(e)
+```
+:::
+::: {.column .fragment}
+```{.python filename="atom_motion_predict.py" code-line-numbers="7-8|50,53|32|33-34|35-36"}
+import machine
+import struct
+import neopixel
+import utime
+
+# setup uart
+uart = machine.UART(1, tx=19, rx=22)
+uart.init(115200, bits=8, parity=0, stop=0)
+
+# setup led
+np = neopixel.NeoPixel(machine.Pin(27), 1)
+
+# setup servo and motor
+sda_pin = machine.Pin(25)
+scl_pin = machine.Pin(21)
+
+i2c = machine.I2C(0, sda=sda_pin, scl=scl_pin, freq=400000)
+devices = i2c.scan()
+
+device = [i for i in devices if hex(i) == '0x38'][0]
+
+def set_speed(speed):
+    buf = bytearray(1)
+    struct.pack_into('b', buf, 0, speed)
+    i2c.writeto_mem(device, 0, buf)
+
+def set_angle(angle):
+    buf = bytearray(1)
+    struct.pack_into('b', buf, 0, angle)
+    i2c.writeto_mem(device, 2, buf)
+
+def set_direction(x):
+    if x == 0:
+        set_angle(90)
+    elif x == 1:
+        set_angle(75)
+    else:
+        set_angle(105)
+        
+def set_run(x):
+    if x > 200:
+        set_speed(127)
+    elif x < 50:
+        set_speed(0)
+    else:
+        set_speed(86)
+        
+while True:
+    try:
+        out = uart.read(1)
+        print(out.decode())
+        
+        set_direction(int(out))
+        set_speed(99)
+    except:
+        pass
+```
+:::
+::::
+
+## Tensorflow
+
+\
+
+```{.python filename="model.py" code-line-numbers="7-19|25-31"}
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.models import Sequential
+
+num_classes = len(class_names)
+
+model = Sequential([
+  layers.Rescaling(1./255, input_shape=(img_height, img_width, 3)),
+  layers.Resizing(IMG_SIZE, IMG_SIZE),
+  layers.Conv2D(16, 3, padding='same', activation='relu'),
+  layers.MaxPooling2D(),
+  layers.Conv2D(32, 3, padding='same', activation='relu'),
+  layers.MaxPooling2D(),
+  layers.Conv2D(64, 3, padding='same', activation='relu'),
+  layers.MaxPooling2D(),
+  layers.Flatten(),
+  layers.Dense(128, activation='relu'),
+  layers.Dense(num_classes)
+])
+
+model.compile(optimizer='adam',
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+tf.saved_model.save(model, 'model')
+
+converter = tf.lite.TFLiteConverter.from_saved_model('model')
+tflite_model = converter.convert()
+
+with open('model.tflite', 'wb') as f:
+    f.write(tflite_model)
+```
+
+\
+
+::: {.fragment}
+```{.bash filename="converter.sh"}
+./ncc compile model.tflite model.kmodel -i tflite -t k210 --dataset images
+```
+:::
+
+##
+
+<center>
+{{< video https://www.youtube.com/watch?v=yLkClyEKXC0 width="1000" height="800" >}}
+</center>
+
+##
+
+:::: columns
+::: {.column width="50%"}
+::: {.medium right="70%"}
+
+<h1>Obrigado</h1>
+
+:::
+:::
+
+::: {.column width="50%"}
+::: {.medium right="30%"}
+
+[th1460.github.io](https://th1460.github.io/)<br>
+[github.com/th1460](https://github.com/)<br>
+[medium.com/@thopr](https://medium.com/@thopr)<br>
+[linkedin.com/in/thop](https://www.linkedin.com/in/thop)<br>
+[twitter.com/th14600](https://twitter.com/th14600)<br>
+[@thop@fosstodon.org](https://fosstodon.org/@thop)
+
+:::
+:::
+::::
+
+#
+
+<center>
+![http://ibm.biz/rte2023nps-cps](nps.png){width="30%"}
+</center>
