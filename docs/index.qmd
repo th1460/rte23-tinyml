@@ -582,11 +582,15 @@ with open('model.tflite', 'wb') as f:
 [medium.com/@thopr](https://medium.com/@thopr)<br>
 [linkedin.com/in/thop](https://www.linkedin.com/in/thop)<br>
 [twitter.com/th14600](https://twitter.com/th14600)<br>
-[@thop@fosstodon.org](https://fosstodon.org/@thop)
+[@thop@fosstodon.org](https://fosstodon.org/@thop)<br>
 
 :::
 :::
 ::::
+
+::: aside
+slides: <https://th1460.github.io/rte23-tinyml/>
+:::
 
 #
 
